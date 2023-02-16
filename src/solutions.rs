@@ -9,10 +9,11 @@ use crate::data::*;
 use crate::toy_data::*;
 
 use std::error::Error;
+use std::cmp::*;
 use std::cmp::Ordering::*;
 use std::collections::HashMap;
-
-// use priority_queue::PriorityQueue;
+use core::slice::Iter;
+use std::collections::BinaryHeap;
 
 pub fn solve1p1() -> Option<()> {
     let data: Vec<Vec<u32>> = 
@@ -268,13 +269,11 @@ pub fn solve5p1() -> Option<()> {
     carry.next();
     for line in carry {
         let mut n: usize = 1;
-        // println!("amm: {amm}");
         while n < amm*4 {
             let ch = line.chars().nth(n)?;
             if ch != ' ' {
                 crane[(n-1)/4].push(ch);
             }
-            // println!("n: {}, ch: {}", n, ch);
             n += 4;
         }
     }
@@ -287,7 +286,6 @@ pub fn solve5p1() -> Option<()> {
         let to: usize = inv.next()?.to_digit(10)?.try_into().unwrap();
         let from: usize = inv.next()?.to_digit(10)?.try_into().unwrap();
         let boxes: usize = inv.rev().collect::<String>().parse().unwrap();
-        // println!("{boxes}, {from}, {to}");
 
         for _ in 1..=boxes {
             let b = crane[from-1].pop()?;
@@ -319,13 +317,11 @@ pub fn solve5p2() -> Option<()> {
     carry.next();
     for line in carry {
         let mut n: usize = 1;
-        // println!("amm: {amm}");
         while n < amm*4 {
             let ch = line.chars().nth(n)?;
             if ch != ' ' {
                 crane[(n-1)/4].push(ch);
             }
-            // println!("n: {}, ch: {}", n, ch);
             n += 4;
         }
     }
@@ -338,7 +334,6 @@ pub fn solve5p2() -> Option<()> {
         let to: usize = inv.next()?.to_digit(10)?.try_into().unwrap();
         let from: usize = inv.next()?.to_digit(10)?.try_into().unwrap();
         let boxes: usize = inv.rev().collect::<String>().parse().unwrap();
-        // println!("{boxes}, {from}, {to}");
 
         let mut temp: Vec<char> = Vec::new();
         for _ in 1..=boxes {
@@ -359,3 +354,300 @@ pub fn solve5p2() -> Option<()> {
     Some(())
 }
 
+pub fn solve6p1() -> Option<()> {
+    let b: Vec<char> = DAY6T.chars().collect();
+    let mut n: usize = 0;
+    for v in 0.. {
+        // why yes 
+        if b[v] != b[v+1] && b[v+2] != b[v+3] {
+            if b[v] != b[v+2] && b[v+1] != b[v+3] {
+                if b[v] != b[v+3] && b[v+1] != b[v+2] {
+                    n = v+4;
+                    break
+                }
+            }
+        }
+    }
+    println!("{n}");
+
+    Some(())
+}
+
+pub fn solve6p2() -> Option<()> {
+    let b: Vec<char> = DAY6.chars().collect();
+    let mut n: usize = 0;
+    'outer: for i in 0.. {
+        let mut hm: HashMap<char, bool> = HashMap::new();
+        for j in i..=i+13 {
+            if let Some(_) = hm.get(&b[j]) {
+                break
+            }
+            hm.insert(b[j], true);
+            if j == i+13 {
+                n = i+14;
+                break 'outer
+            }
+        }
+    }
+    println!("{n}");
+
+    Some(())
+}
+
+pub fn solve7p1() -> Option<()> {
+    #[derive(Debug)]
+    struct Node<'a> {
+        name: &'a str,
+        size: Option<u32>,
+        files: Vec<u32>,
+        subfolders: Vec<Box<Node<'a>>>
+    }
+
+    impl<'a> Node<'_> {
+        fn new(name: &str) -> Node {
+            Node { name: name, size: None, 
+                files: Vec::new(), subfolders: Vec::new() }
+        }
+    }
+
+    #[derive(Debug)]
+    enum Entry<'a> {
+        Dir(&'a str),
+        File(u32, &'a str) 
+    }
+
+    #[derive(Debug)]
+    enum Cmd<'a> {
+        Ls(Vec<Entry<'a>>),
+        Cdb, // cd back
+        Cd(&'a str) 
+    }
+
+    fn parse_command(cmd: &str) -> Option<Cmd> {
+        if cmd.starts_with("ls") {
+            let mut entries = Vec::new();
+            for entry in cmd.lines().skip(1) {
+                if entry.starts_with("dir ") {
+                    let (_, n) = entry.split_once(" ")?;
+                    entries.push(Entry::Dir(n));
+                } else {
+                    let (s, n) = entry.split_once(" ")?;
+                    entries.push(Entry::File(s.parse().ok()?, n));
+                }
+            }
+            return Some(Cmd::Ls(entries))
+        } else if cmd.starts_with("cd ..") {
+            return Some(Cmd::Cdb)
+        } else {
+            return Some(Cmd::Cd(cmd.strip_prefix("cd ")?.trim()))
+        }
+    }
+
+    fn interpret<'a>(
+        node: &mut Box<Node<'a>>, 
+        cmds: &mut Vec<Cmd<'a>>) -> Option<()> {
+
+        loop {
+            let cmd = cmds.pop()?;
+            match cmd {
+                Cmd::Cdb => return Some(()),
+                Cmd::Cd(s) => {
+                    let mut i = 0;
+                    loop {
+                        if node.subfolders[i].name == s {
+                            interpret(&mut node.subfolders[i], cmds)?;
+                            break
+                        }
+                        i += 1;
+                    }
+                },
+                Cmd::Ls(s) => {
+                    for entry in s {
+                        match entry {
+                            Entry::Dir(s) => 
+                                node.subfolders
+                                    .push(Box::new(Node::new(s))),
+                            Entry::File(n, _) => 
+                                node.files.push(n),
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn compute(node: &mut Box<Node>) -> u32 {
+        let mut tally: u32 = node.files.iter().sum();
+
+        for i in 0..node.subfolders.len() {
+            tally += compute(&mut node.subfolders[i]);
+        }
+
+        node.size = Some(tally);
+
+        return tally
+    }
+
+    fn result(node: Box<Node>) -> u32 {
+        let mut tally: u32 = 0;
+        for sub in node.subfolders {
+            tally += result(sub);
+        }
+
+        if let Some(s) = node.size { 
+            if s <= 100000 {
+                tally += s;
+            }
+        }
+
+        return tally
+    }
+
+    let mut data: Vec<Cmd> = DAY7.split("$ ").skip(2) 
+        .map(&parse_command)
+        .flatten()
+        .collect();
+
+    data.reverse();
+
+    let mut node = Box::new(Node::new("/"));
+    interpret(&mut node, &mut data);
+    compute(&mut node);
+
+    println!("{:?}", node);
+    println!("{:?}", result(node));
+
+    Some(())
+}
+
+pub fn solve7p2() -> Option<()> {
+    #[derive(Debug)]
+    struct Node<'a> {
+        name: &'a str,
+        size: Option<u32>,
+        files: Vec<u32>,
+        subfolders: Vec<Box<Node<'a>>>
+    }
+
+    impl<'a> Node<'_> {
+        fn new(name: &str) -> Node {
+            Node { name: name, size: None, 
+                files: Vec::new(), subfolders: Vec::new() }
+        }
+    }
+
+    #[derive(Debug)]
+    enum Entry<'a> {
+        Dir(&'a str),
+        File(u32, &'a str) 
+    }
+
+    #[derive(Debug)]
+    enum Cmd<'a> {
+        Ls(Vec<Entry<'a>>),
+        Cdb, // cd back
+        Cd(&'a str) 
+    }
+
+    struct NodePtr {
+        size_ptr: *mut Option<u32>
+    }
+
+    fn parse_command(cmd: &str) -> Option<Cmd> {
+        if cmd.starts_with("ls") {
+            let mut entries = Vec::new();
+            for entry in cmd.lines().skip(1) {
+                if entry.starts_with("dir ") {
+                    let (_, n) = entry.split_once(" ")?;
+                    entries.push(Entry::Dir(n));
+                } else {
+                    let (s, n) = entry.split_once(" ")?;
+                    entries.push(Entry::File(s.parse().ok()?, n));
+                }
+            }
+            return Some(Cmd::Ls(entries))
+        } else if cmd.starts_with("cd ..") {
+            return Some(Cmd::Cdb)
+        } else {
+            return Some(Cmd::Cd(cmd.strip_prefix("cd ")?.trim()))
+        }
+    }
+
+    fn interpret<'a>(
+        node: &mut Box<Node<'a>>, 
+        cmds: &mut Vec<Cmd<'a>>) -> Option<()> {
+
+        loop {
+            let cmd = cmds.pop()?;
+            match cmd {
+                Cmd::Cdb => return Some(()),
+                Cmd::Cd(s) => {
+                    let mut i = 0;
+                    loop {
+                        if node.subfolders[i].name == s {
+                            interpret(&mut node.subfolders[i], cmds)?;
+                            break
+                        }
+                        i += 1;
+                    }
+                },
+                Cmd::Ls(s) => {
+                    for entry in s {
+                        match entry {
+                            Entry::Dir(s) => 
+                                node.subfolders
+                                    .push(Box::new(Node::new(s))),
+                            Entry::File(n, _) => 
+                                node.files.push(n),
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn compute(node: &mut Box<Node>) -> u32 {
+        let mut tally: u32 = node.files.iter().sum();
+
+        for i in 0..node.subfolders.len() {
+            tally += compute(&mut node.subfolders[i]);
+        }
+
+        node.size = Some(tally);
+
+        return tally
+    }
+
+    fn result(taken: u32, node: &Box<Node>) -> u32 {
+        let mut smallest: u32 = 70000000;
+
+        if let Some(s) = node.size { 
+            if taken-s <= 40000000 {
+                smallest = s;
+            }
+        }
+
+        for sub in &node.subfolders {
+            smallest = min(smallest, result(taken, sub));
+        }
+
+        return smallest
+    }
+
+    let mut data: Vec<Cmd> = DAY7.split("$ ").skip(2) 
+        .map(&parse_command)
+        .flatten()
+        .collect();
+    data.reverse(); 
+
+
+    let mut node = Box::new(Node::new("/"));
+    interpret(&mut node, &mut data);
+    compute(&mut node);
+
+    let taken = node.size.unwrap();
+
+    println!("{:?}", result(taken, &node));
+
+    Some(())
+}
