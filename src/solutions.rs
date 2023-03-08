@@ -651,3 +651,116 @@ pub fn solve7p2() -> Option<()> {
 
     Some(())
 }
+
+pub fn solve8p1() -> Option<()> {
+    let mut data: Vec<Vec<(i32, bool)>> = DAY8.lines()
+        .map(|x| 
+            x.chars().map(|x| 
+                (x.to_digit(10).expect("bad data") as i32, false))
+            .collect())
+        .collect();
+
+    let mut count: u32 = 0;
+
+    let ym = data.len();
+    let xm = data[0].len();
+
+    for y in 0..ym {
+        let mut biggest: i32 = -1;
+        for x in 0..xm {
+            if data[y][x].0 > biggest {
+                count += !data[y][x].1 as u32;
+                data[y][x] = (data[y][x].0, true);
+                biggest = data[y][x].0;
+            }
+        }
+    }
+
+    for y in 0..ym {
+        let mut biggest: i32 = -1;
+        for x in (0..xm).rev() {
+            if data[y][x].0 > biggest {
+                count += !data[y][x].1 as u32;
+                data[y][x] = (data[y][x].0, true);
+                biggest = data[y][x].0;
+            }
+        }
+    }
+
+    for x in 0..xm {
+        let mut biggest: i32 = -1;
+        for y in 0..ym {
+            if data[y][x].0 > biggest {
+                count += !data[y][x].1 as u32;
+                data[y][x] = (data[y][x].0, true);
+                biggest = data[y][x].0;
+            }
+        }
+    }
+
+    for x in 0..xm {
+        let mut biggest: i32 = -1;
+        for y in (0..ym).rev() {
+            if data[y][x].0 > biggest {
+                count += !data[y][x].1 as u32;
+                data[y][x] = (data[y][x].0, true);
+                biggest = data[y][x].0;
+            }
+        }
+    }
+
+    println!("{:?}", count);
+
+    Some(())
+}
+
+pub fn solve8p2() -> Option<()> {
+    let data: Vec<Vec<u32>> = DAY8.lines()
+        .map(|x| 
+            x.chars().map(|x| 
+                x.to_digit(10).expect("bad data"))
+            .collect())
+        .collect();
+
+    let mut biggest: usize = 0;
+
+    let ym = data.len();
+    let xm = data[0].len();
+
+    for y in 1..ym-1 {
+        for x in 1..xm-1 {
+            let this = data[y][x];
+            let mut mul = 1;
+
+            let mut k = 1;
+            while k < x && data[y][x-k] < this {
+                k += 1;
+            }
+            mul *= k;
+
+            let mut k = 1;
+            while x+k < xm-1 && data[y][x+k] < this {
+                k += 1;
+            }
+            mul *= k;
+
+            let mut k = 1;
+            while k < y && data[y-k][x] < this {
+                k += 1;
+            }
+            mul *= k;
+
+            let mut k = 1;
+            while y+k < ym-1 && data[y+k][x] < this {
+                k += 1;
+            }
+            mul *= k;
+
+            biggest = max(biggest, mul);
+        }
+    }
+
+    println!("{}", biggest);
+
+    Some(())
+}
