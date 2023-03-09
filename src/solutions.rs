@@ -1026,3 +1026,162 @@ pub fn solve10p2() -> Option<()> {
 
     Some(())
 }
+
+pub fn solve11p1() -> Option<()> {
+    struct Monkey {
+        items: Vec<u32>,
+        op: Box<dyn Fn(u32) -> u32>,
+        test: (u32, usize, usize),
+        inspect_count: u32
+    }
+
+    let mut monkeys: Vec<Monkey> = Vec::new();
+
+    for monke in DAY11.lines().chain("\n".lines())
+        .array_chunks::<7>() {
+        
+        let items = monke[1].strip_prefix("Starting items: ")?
+            .split(", ").map(
+                |x| x.parse::<u32>().expect("bad data"))
+            .collect();
+
+        let op: Box<dyn Fn(u32) -> u32> = 
+            match monke[2]
+                .strip_prefix("Operation: new = old ")?
+                .split_once(" ")? {
+            
+            (_, s) if s.parse::<i32>().is_err() => 
+                Box::new(|x| x*x),
+            ("*", n) => 
+                Box::new(|x| x*n.parse::<u32>()
+                    .expect("bad data")),
+            ("+", n) => 
+                Box::new(|x| x+n.parse::<u32>()
+                    .expect("bad data")),
+            _ => unreachable!()
+        };
+
+        let test = 
+            (
+            monke[3].strip_prefix("Test: divisible by ")?
+                .parse().expect("bad data"),
+            monke[4].strip_prefix("  If true: throw to monkey ")?
+                .parse().expect("bad data"),
+            monke[5].strip_prefix("  If false: throw to monkey ")?
+                .parse().expect("bad data")
+            );
+
+        monkeys.push(
+            Monkey { items, op, test, inspect_count: 0 });
+    }
+
+    let l = monkeys.len();
+
+    for _ in 0..20 {
+        for i in 0..l {
+            for item in monkeys[i].items.clone() {
+                monkeys[i].inspect_count += 1;
+
+                let item = (monkeys[i].op)(item) / 3;
+                if item % monkeys[i].test.0 == 0 {
+                    let to = monkeys[i].test.1;
+                    monkeys[to].items.push(item);
+                } else {
+                    let to = monkeys[i].test.2;
+                    monkeys[to].items.push(item);
+                }
+            }
+            monkeys[i].items = Vec::new();
+        }
+    }
+
+    let mut monkey_business = 1;
+
+    monkeys.sort_by_key(|x| x.inspect_count);
+    for monkey in monkeys.iter().rev().take(2) {
+        monkey_business *= monkey.inspect_count;
+    }
+    println!("{:?}", monkey_business);
+
+    Some(())
+}
+
+pub fn solve11p2() -> Option<()> {
+    struct Monkey {
+        items: Vec<u64>,
+        op: Box<dyn Fn(u64) -> u64>,
+        test: (u64, usize, usize),
+        inspect_count: u64
+    }
+
+    let mut monkeys: Vec<Monkey> = Vec::new();
+
+    for monke in DAY11.lines().chain("\n".lines())
+        .array_chunks::<7>() {
+        
+        let items = monke[1].strip_prefix("Starting items: ")?
+            .split(", ").map(
+                |x| x.parse::<u64>().expect("bad data"))
+            .collect();
+
+        let op: Box<dyn Fn(u64) -> u64> = 
+            match monke[2]
+                .strip_prefix("Operation: new = old ")?
+                .split_once(" ")? {
+            
+            (_, s) if s.parse::<i32>().is_err() => 
+                Box::new(|x| x*x),
+            ("*", n) => 
+                Box::new(|x| x*n.parse::<u64>()
+                    .expect("bad data")),
+            ("+", n) => 
+                Box::new(|x| x+n.parse::<u64>()
+                    .expect("bad data")),
+            _ => unreachable!()
+        };
+
+        let test = 
+            (
+            monke[3].strip_prefix("Test: divisible by ")?
+                .parse().expect("bad data"),
+            monke[4].strip_prefix("  If true: throw to monkey ")?
+                .parse().expect("bad data"),
+            monke[5].strip_prefix("  If false: throw to monkey ")?
+                .parse().expect("bad data")
+            );
+
+        monkeys.push(
+            Monkey { items, op, test, inspect_count: 0 });
+    }
+
+    let l = monkeys.len();
+    let cm = monkeys.iter().fold(1, |acc, x| x.test.0 * acc);
+  
+    for _ in 0..10000 {
+        for i in 0..l {
+            for item in monkeys[i].items.clone() {
+                monkeys[i].inspect_count += 1;
+
+                let item = (monkeys[i].op)(item) % cm;
+                if item % monkeys[i].test.0 == 0 {
+                    let to = monkeys[i].test.1;
+                    monkeys[to].items.push(item);
+                } else {
+                    let to = monkeys[i].test.2;
+                    monkeys[to].items.push(item);
+                }
+            }
+            monkeys[i].items = Vec::new();
+        }
+    }
+
+    let mut monkey_business = 1;
+
+    monkeys.sort_by_key(|x| x.inspect_count);
+    for monkey in monkeys.iter().rev().take(2) {
+        monkey_business *= monkey.inspect_count;
+    }
+    println!("{:?}", monkey_business);
+
+    Some(())
+}
