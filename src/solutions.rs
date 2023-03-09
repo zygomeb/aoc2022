@@ -764,3 +764,265 @@ pub fn solve8p2() -> Option<()> {
 
     Some(())
 }
+
+pub fn solve9p1() -> Option<()> {
+    #[derive(Debug, Eq, PartialEq, Hash, Clone)]
+    struct Point {
+        x: i32,
+        y: i32
+    }
+    #[derive(Debug)]
+    struct Plane {
+        head: Point, 
+        tail: Point,
+        visited: HashMap<Point, ()>,
+        visited_count: u32
+    }
+    fn follow_move(plane: &mut Plane) {
+        match (
+            (plane.head.x - plane.tail.x).abs(), (plane.head.y - plane.tail.y).abs()) {
+            
+            // diagonal x-escape
+            (i,k) if i > 1 && k == 1 => { 
+                plane.tail.y = plane.head.y;
+                plane.tail.x += (plane.head.x - plane.tail.x) / 2;
+            },
+            // diagonal y-escape
+            (i,k) if i == 1 && k > 1 => {
+                plane.tail.x = plane.head.x;
+                plane.tail.y += (plane.head.y - plane.tail.y) / 2;
+            },
+            // horizontal escape
+            (2,0) => {
+                plane.tail.x += (plane.head.x - plane.tail.x) / 2;
+            },
+            // vertical escape
+            (0,2) => {
+                plane.tail.y += (plane.head.y - plane.tail.y) / 2;
+            },
+            // assumed within reach
+            _ => { }
+
+        }
+        
+        if let None = plane.visited.get(&plane.tail) {
+            plane.visited.insert(plane.tail.clone(), ());
+            plane.visited_count += 1;
+        }
+    }
+
+    let mut plane = Plane { 
+        head: Point { x: 0, y: 0 }, 
+        tail: Point { x: 0, y: 0 },
+        visited: HashMap::new(),
+        visited_count: 1
+    };
+    plane.visited.insert(Point { x: 0, y: 0 }, ());
+
+    for line in DAY9.lines() {
+        if let Some((dir, num)) = line.rsplit_once(' ') {
+            match dir {
+                "R" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.head.x += 1;
+                        follow_move(&mut plane);
+                        println!("head: {:?}, tail: {:?}", &plane.head, &plane.tail);
+                    }
+                },
+                "L" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.head.x -= 1;
+                        follow_move(&mut plane);
+                        println!("head: {:?}, tail: {:?}", &plane.head, &plane.tail);
+                    }
+                },
+                "U" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.head.y += 1;
+                        follow_move(&mut plane);
+                        println!("head: {:?}, tail: {:?}", &plane.head, &plane.tail);
+                    }
+                },
+                "D" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.head.y -= 1;
+                        follow_move(&mut plane);
+                        println!("head: {:?}, tail: {:?}", &plane.head, &plane.tail);
+                    }
+                },
+                _ => unreachable!()
+            }
+        }
+    }
+
+    println!{"{:?}", plane.visited_count};
+
+    Some(())
+}
+
+pub fn solve9p2() -> Option<()> {
+    #[derive(Debug, Eq, PartialEq, Hash, Clone)]
+    struct Point {
+        x: i32,
+        y: i32
+    }
+    #[derive(Debug)]
+    struct Plane {
+        rope: [Point; 10], 
+        visited: HashMap<Point, ()>,
+        visited_count: u32
+    }
+    fn follow_move(plane: &mut Plane) {
+        for n in 0..=8 {
+            match (
+                (plane.rope[n].x - plane.rope[n+1].x).abs(), 
+                (plane.rope[n].y - plane.rope[n+1].y).abs()) {
+                
+                // diagonal x-escape
+                (i,k) if i > 1 && k == 1 => { 
+                    plane.rope[n+1].y = plane.rope[n].y;
+                    plane.rope[n+1].x += (plane.rope[n].x - plane.rope[n+1].x) / 2;
+                },
+                // diagonal y-escape
+                (i,k) if i == 1 && k > 1 => {
+                    plane.rope[n+1].x = plane.rope[n].x;
+                    plane.rope[n+1].y += (plane.rope[n].y - plane.rope[n+1].y) / 2;
+                },
+                // diagonal diagonal escape 
+                (2, 2) => {
+                    plane.rope[n+1].x += (plane.rope[n].x - plane.rope[n+1].x) / 2;
+                    plane.rope[n+1].y += (plane.rope[n].y - plane.rope[n+1].y) / 2;
+                },
+                // horizontal escape
+                (2,0) => {
+                    plane.rope[n+1].x += (plane.rope[n].x - plane.rope[n+1].x) / 2;
+                },
+                // vertical escape
+                (0,2) => {
+                    plane.rope[n+1].y += (plane.rope[n].y - plane.rope[n+1].y) / 2;
+                },
+                // assumed within reach
+                _ => { }
+    
+            }
+        }
+        
+        if let None = plane.visited.get(&plane.rope[9]) {
+            plane.visited.insert(plane.rope[9].clone(), ());
+            plane.visited_count += 1;
+        }
+    }
+
+    let mut plane = Plane { 
+        rope: [
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 }, 
+            Point { x: 0, y: 0 } ],
+
+        visited: HashMap::new(),
+        visited_count: 1
+    };
+    plane.visited.insert(Point { x: 0, y: 0 }, ());
+
+    for line in DAY9.lines() {
+        if let Some((dir, num)) = line.rsplit_once(' ') {
+            match dir {
+                "R" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.rope[0].x += 1;
+                        follow_move(&mut plane);
+                    }
+                },
+                "L" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.rope[0].x -= 1;
+                        follow_move(&mut plane);
+                    }
+                },
+                "U" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.rope[0].y += 1;
+                        follow_move(&mut plane);
+                    }
+                },
+                "D" => {
+                    for _ in 0..num.parse().expect("bad data") {
+                        plane.rope[0].y -= 1;
+                        follow_move(&mut plane);
+                    }
+                },
+                _ => unreachable!()
+            }
+        }
+    }
+
+    println!{"{:?}", plane.visited_count};
+    Some(())
+}
+
+pub fn solve10p1() -> Option<()> {
+    let mut x: i32 = 1;
+    let mut clock = 1;
+
+    let mut result = 0;
+
+    for line in DAY10.lines() {
+        if line.chars().nth(0)? == 'n' {
+            clock += 1;
+            if (clock - 20) % 40 == 0 {
+                result += x * clock;
+            }
+        } else {
+            clock += 1;
+            if (clock - 20) % 40 == 0 {
+                result += x * clock;
+            }
+
+            x += line.split(" ").nth(1)?.parse::<i32>().expect("bad data");
+            clock += 1;
+            if (clock - 20) % 40 == 0 {
+                result += x * clock;
+            }
+        }
+    }
+
+    println!("{result}");
+
+    Some(())
+}
+
+pub fn solve10p2() -> Option<()> {
+    let mut x: i32 = 1;
+    let mut clock = 1;
+    fn tick(clock: &mut i32, x: i32) {
+        if (*clock%40 - x).abs() < 2 {
+            print!("#");
+        } else {
+            print!(".");
+        }
+        if *clock%40 == 0 {
+            println!("");
+        }
+
+        *clock += 1;
+    }
+
+    for line in DAY10.lines() {
+        if line.chars().nth(0)? == 'n' {
+            tick(&mut clock, x);
+        } else {
+            tick(&mut clock, x);
+            x += line.split(" ").nth(1)?.parse::<i32>().expect("bad data");
+            tick(&mut clock, x);
+        }
+    }
+
+    Some(())
+}
