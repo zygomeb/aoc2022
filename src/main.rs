@@ -11,7 +11,7 @@ use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
   
-    solve11p2();
+    solve12p2();
 
     Ok(())
 }

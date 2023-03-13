@@ -262,3 +262,8 @@ Test: divisible by 17
   If true: throw to monkey 0
   If false: throw to monkey 1";
 
+pub const DAY12T: &str = "Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi";

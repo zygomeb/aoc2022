@@ -1185,3 +1185,277 @@ pub fn solve11p2() -> Option<()> {
 
     Some(())
 }
+
+pub fn solve12p1() -> Option<()> {
+    // 159 x 41
+
+    let data1 = DAY12.lines()
+        .map(|x| x.chars().enumerate())
+        .enumerate();
+
+    #[derive(Eq, PartialEq, Debug)]
+    struct Node {
+        distance: u32,
+        x: usize,
+        y: usize
+    }
+
+    impl PartialOrd for Node {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for Node {
+        fn cmp(&self, other: &Self) -> Ordering {
+            // reverse impl for min-heap
+            other.distance.cmp(&self.distance)
+        }
+    }
+
+    fn h(x: char) -> u32 {
+        if x == 'S' {
+            0
+        } else if x == 'E' {
+            'z' as u32 - 'a' as u32
+        } else {
+            x as u32 - 'a' as u32
+        }
+    }
+
+    fn cli_diff(this: u32, other: u32) -> u32 {
+        if this >= other {
+            0
+        } else {
+            other-this
+        }
+    }
+
+    let mut queue: BinaryHeap<Node> = BinaryHeap::new();
+
+    let mut start = (0,0);
+    'outer: for (y, l) in data1 {
+        for (x, c) in l {
+            if c == 'S' {
+                start = (x, y);
+                break 'outer;
+            }
+        }
+    }
+
+    let mut data: Vec<Vec<(char, bool)>> = 
+        DAY12.lines().map(
+            |x| x.chars().map(|c| (c,false)).collect()
+        ).collect();
+
+    let my = data.len() - 1;
+    let mx = data[0].len() - 1;
+
+    queue.push(Node{distance:0, x:start.0, y:start.1});
+
+    let mut result = 0;
+    while let Some(_) = queue.peek() {
+        let this = queue.pop()?;
+        if data[this.y][this.x].1 {
+            continue
+        }
+        data[this.y][this.x].1 = true;
+
+        let val = data[this.y][this.x];
+
+        if val.0 == 'E' {
+            result = this.distance;
+            break
+        }
+
+        if !data[min(this.y, my-1)+1][this.x].1
+            && 
+            cli_diff(h(val.0),
+            h(data[min(this.y+1, my)][this.x].0)) <= 1 
+            {
+            
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x, 
+                    y:this.y+1});
+        }
+
+        
+        if !data[max(this.y, 1)-1][this.x].1 
+            && 
+            cli_diff(h(val.0),
+            h(data[max(this.y-1, 0)][this.x].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x, 
+                    y:this.y-1});
+        }
+        if !data[this.y][min(this.x, mx-1)+1].1
+            && 
+            cli_diff(h(val.0),
+            h(data[this.y][min(this.x+1, mx)].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x+1, 
+                    y:this.y});
+        }
+        if !data[this.y][max(this.x, 1)-1].1
+            &&
+            cli_diff(h(val.0),
+            h(data[this.y][max(this.x-1, 0)].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x-1, 
+                    y:this.y});
+        }
+
+    }
+
+    println!("{:?}", result);
+
+
+    Some(())
+}
+
+pub fn solve12p2() -> Option<()> {
+    // 159 x 41
+
+    let data1 = DAY12.lines()
+        .map(|x| x.chars().enumerate())
+        .enumerate();
+
+    #[derive(Eq, PartialEq, Debug)]
+    struct Node {
+        distance: u32,
+        x: usize,
+        y: usize
+    }
+
+    impl PartialOrd for Node {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for Node {
+        fn cmp(&self, other: &Self) -> Ordering {
+            // reverse impl for min-heap
+            other.distance.cmp(&self.distance)
+        }
+    }
+
+    fn h(x: char) -> u32 {
+        if x == 'S' {
+            0
+        } else if x == 'E' {
+            'z' as u32 - 'a' as u32
+        } else {
+            x as u32 - 'a' as u32
+        }
+    }
+
+    fn cli_diff(this: u32, other: u32) -> u32 {
+        if this <= other {
+            0
+        } else {
+            this-other
+        }
+    }
+
+    let mut queue: BinaryHeap<Node> = BinaryHeap::new();
+
+    let mut start = (0,0);
+    'outer: for (y, l) in data1 {
+        for (x, c) in l {
+            if c == 'E' {
+                start = (x, y);
+                break 'outer;
+            }
+        }
+    }
+
+    let mut data: Vec<Vec<(char, bool)>> = 
+        DAY12.lines().map(
+            |x| x.chars().map(|c| (c,false)).collect()
+        ).collect();
+
+    let my = data.len() - 1;
+    let mx = data[0].len() - 1;
+
+    queue.push(Node{distance:0, x:start.0, y:start.1});
+
+    let mut result = 0;
+    while let Some(_) = queue.peek() {
+        let this = queue.pop()?;
+        if data[this.y][this.x].1 {
+            continue
+        }
+        data[this.y][this.x].1 = true;
+
+        let val = data[this.y][this.x];
+
+        if val.0 == 'a' {
+            result = this.distance;
+            break
+        }
+
+        if !data[min(this.y, my-1)+1][this.x].1
+            && 
+            cli_diff(h(val.0),
+            h(data[min(this.y+1, my)][this.x].0)) <= 1 
+            {
+            
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x, 
+                    y:this.y+1});
+        }
+
+        
+        if !data[max(this.y, 1)-1][this.x].1 
+            && 
+            cli_diff(h(val.0),
+            h(data[max(this.y-1, 0)][this.x].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x, 
+                    y:this.y-1});
+        }
+        if !data[this.y][min(this.x, mx-1)+1].1
+            && 
+            cli_diff(h(val.0),
+            h(data[this.y][min(this.x+1, mx)].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x+1, 
+                    y:this.y});
+        }
+        if !data[this.y][max(this.x, 1)-1].1
+            &&
+            cli_diff(h(val.0),
+            h(data[this.y][max(this.x-1, 0)].0)) <= 1
+            {
+
+            queue.push(
+                Node{distance:this.distance+1, 
+                    x:this.x-1, 
+                    y:this.y});
+        }
+
+    }
+
+    println!("{:?}", result);
+
+
+    Some(())
+}
