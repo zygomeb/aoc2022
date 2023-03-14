@@ -1459,3 +1459,231 @@ pub fn solve12p2() -> Option<()> {
 
     Some(())
 }
+
+pub fn solve13p1() -> Option<()> {
+    #[derive(Debug, Clone)]
+    enum Element {
+        Number(u32),
+        List(Vec<Element>)
+    }
+    use Element::*;
+
+    fn build_ast1(line: &str) -> Vec<Element> {
+        let mut ptr = 1;
+        build_ast(line, &mut ptr)
+    }
+    fn build_ast(line: &str, ptr: &mut usize) 
+        -> Vec<Element> {
+
+        let mut payload = Vec::new();
+        
+        while let Some(token) = line.chars().nth(*ptr) {
+            *ptr += 1;
+            match token {
+                ']' => return payload,
+                ',' => continue,
+                '[' => 
+                    payload.push(
+                        List(
+                            build_ast(line, ptr))),
+                n if n.is_digit(10) => {
+                    // ugly hack ikr
+                    let c = line.chars().nth(*ptr);
+                    if c.is_some() && c.unwrap().is_digit(10)  {
+                            payload.push(Number(
+                                line.get(*ptr-1..*ptr+1)
+                                .unwrap()
+                                .parse()
+                                .unwrap()
+                            ));
+                            *ptr += 1;
+                    } else {
+                    payload.push(
+                        Number(
+                            n as u32 - '0' as u32))
+                    }},
+
+                _ => unreachable!()
+            }
+        }
+
+        unreachable!();
+    }
+
+    fn compare(left: &Vec<Element>, 
+            right: &Vec<Element>)
+        -> Option<bool> {
+
+        let mut idx = 0;
+
+        loop {
+            match (left.get(idx), right.get(idx)) {
+                (Some(l), Some(r)) => {
+                    match (l, r) {
+                        (Number(x), Number(y)) => 
+                            match x.cmp(y) {
+                                Less => return Some(true),
+                                Greater => return Some(false),
+                                Equal => {}
+                            },
+                        (List(x), List(y)) => 
+                            if let Some(p) = compare(&x, &y) {
+                                return Some(p);
+                            },
+                        (Number(x), List(y)) =>
+                            if let Some(p) = compare(
+                                &vec![Number(*x)], &y) {
+                                    
+                                return Some(p);
+                            },
+                        (List(x), Number(y)) =>
+                            if let Some(p) = compare(&x, 
+                                &vec![Number(*y)]) {
+                                    
+                                return Some(p);
+                            }
+                    }
+                },
+                (None, Some(_)) => return Some(true),
+                (Some(_), None) => return Some(false),
+                (None, None) => return None
+            }
+            idx += 1;
+        }
+    }
+
+    let data: usize = DAY13.split("\n\n")
+        .map(|x| x.split_once("\n").unwrap())
+        .map(|(x,y)| (build_ast1(x), build_ast1(y)))
+        .map(|(x,y)| compare(&x,&y).unwrap())
+        .enumerate()
+        .map(|(p,q)| (p+1) * q as usize)
+        .sum();
+
+    println!("{:?}", data);
+
+
+    Some(()) 
+}
+
+pub fn solve13p2() -> Option<()> {
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum Element {
+        Number(u32),
+        List(Vec<Element>)
+    }
+    use Element::*;
+
+    fn build_ast1(line: &str) -> Vec<Element> {
+        let mut ptr = 1;
+        build_ast(line, &mut ptr)
+    }
+    fn build_ast(line: &str, ptr: &mut usize) 
+        -> Vec<Element> {
+
+        let mut payload = Vec::new();
+        
+        while let Some(token) = line.chars().nth(*ptr) {
+            *ptr += 1;
+            match token {
+                ']' => return payload,
+                ',' => continue,
+                '[' => 
+                    payload.push(
+                        List(
+                            build_ast(line, ptr))),
+                n if n.is_digit(10) => {
+                    // ugly hack ikr
+                    let c = line.chars().nth(*ptr);
+                    if c.is_some() && c.unwrap().is_digit(10)  {
+                            payload.push(Number(
+                                line.get(*ptr-1..*ptr+1)
+                                .unwrap()
+                                .parse()
+                                .unwrap()
+                            ));
+                            *ptr += 1;
+                    } else {
+                    payload.push(
+                        Number(
+                            n as u32 - '0' as u32))
+                    }},
+
+                _ => unreachable!()
+            }
+        }
+
+        unreachable!();
+    }
+    fn compare1(left: &Vec<Element>, 
+                right: &Vec<Element>) 
+        -> Ordering {
+
+        match compare(left, right) {
+            Some(p) => if p { return Less } else { return Greater },
+            _ => return Equal
+        }
+    }
+    fn compare(left: &Vec<Element>, 
+            right: &Vec<Element>)
+        -> Option<bool> {
+
+        let mut idx = 0;
+
+        loop {
+            match (left.get(idx), right.get(idx)) {
+                (Some(l), Some(r)) => {
+                    match (l, r) {
+                        (Number(x), Number(y)) => 
+                            match x.cmp(y) {
+                                Less => return Some(true),
+                                Greater => return Some(false),
+                                Equal => {}
+                            },
+                        (List(x), List(y)) => 
+                            if let Some(p) = compare(&x, &y) {
+                                return Some(p);
+                            },
+                        (Number(x), List(y)) =>
+                            if let Some(p) = compare(
+                                &vec![Number(*x)], &y) {
+                                    
+                                return Some(p);
+                            },
+                        (List(x), Number(y)) =>
+                            if let Some(p) = compare(&x, 
+                                &vec![Number(*y)]) {
+                                    
+                                return Some(p);
+                            }
+                    }
+                },
+                (None, Some(_)) => return Some(true),
+                (Some(_), None) => return Some(false),
+                (None, None) => return None
+            }
+            idx += 1;
+        }
+    }
+
+    let mut data: Vec<Vec<Element>> = DAY13.split("\n\n")
+        .flat_map(|x| x.split("\n"))
+        .chain(["[[2]]", "[[6]]"].into_iter())
+        .map(|x| build_ast1(x))
+        .collect();
+    
+    data[..].sort_by(compare1);
+
+    let l1 = data.iter()
+        .position(|x| *x == build_ast1("[[2]]"))
+        .unwrap();
+
+    let l2 = data.iter()
+        .position(|x| *x == build_ast1("[[6]]"))
+        .unwrap();
+
+    println!("{:?}", (l1+1) * (l2+1));
+
+
+    Some(()) 
+}
