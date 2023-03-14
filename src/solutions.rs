@@ -1847,3 +1847,87 @@ pub fn solve14p2() -> Option<()> {
     
     Some(())
 }
+
+pub fn solve15p1() -> Option<()> {
+    let mut data: Vec<(i64, i64, i64, i64, u64)> = Vec::new();
+    const Y: i64 = 2000000;
+    const MAX: i64 = 5000000;
+
+    for mut line in DAY15.lines().map(|x| x.split(" ")) {
+        let l0 = line.nth(2)?.strip_prefix("x=")?
+            .strip_suffix(",")?.parse().unwrap();
+        let l1 = line.nth(0)?.strip_prefix("y=")?
+            .strip_suffix(":")?.parse().unwrap();
+
+        let p0 = line.nth(4)?.strip_prefix("x=")?
+            .strip_suffix(",")?.parse().unwrap();
+        let p1 = line.nth(0)?.strip_prefix("y=")?
+            .parse().unwrap();
+
+        data.push((l0,l1,p0,p1,l0.abs_diff(p0)+l1.abs_diff(p1)));
+    }
+
+    let foo = |x0| { 
+        data.iter()
+            .any( |(x1,y1,_,_,d)| 
+                x1.abs_diff(x0)+y1.abs_diff(Y) <= *d ) 
+        &&
+        !data.iter()
+            .any( |(x1,y1,x2,y2,_)| 
+                x0 == *x2 && Y == *y2 || x0 == *x1 && Y == *y1 )
+        };
+
+    let result: i64 = (-MAX..MAX).map(&foo).map(|x| x as i64).sum();
+
+    println!("{:?}", result);
+
+    Some(()) 
+}
+
+pub fn solve15p2() -> Option<()> {
+    let mut data: Vec<(i64, i64, i64, i64, i64)> = Vec::new();
+    const Y: i64 = 2000000;
+    const MAX: i64 = 5000000;
+
+    for mut line in DAY15.lines().map(|x| x.split(" ")) {
+        let l0: i64 = line.nth(2)?.strip_prefix("x=")?
+            .strip_suffix(",")?.parse().unwrap();
+        let l1: i64 = line.nth(0)?.strip_prefix("y=")?
+            .strip_suffix(":")?.parse().unwrap();
+
+        let p0 = line.nth(4)?.strip_prefix("x=")?
+            .strip_suffix(",")?.parse().unwrap();
+        let p1 = line.nth(0)?.strip_prefix("y=")?
+            .parse().unwrap();
+
+        data.push((l0,l1,p0,p1,(l0.abs_diff(p0)+l1.abs_diff(p1)) as i64));
+    }
+
+    let foo = |x0, y0| { 
+        data.clone().iter()
+            .any( |(x1,y1,_,_,d)| 
+                x1.abs_diff(x0)+y1.abs_diff(y0) <= *d as u64 ) 
+        &&
+        !data.clone().iter()
+            .any( |(x1,y1,x2,y2,_)| 
+                x0 == *x2 && y0 == *y2 || x0 == *x1 && y0 == *y1 )
+        };
+
+    let mut points: Vec<(i64,i64)> = Vec::new();
+    for (x1,y1,_,_,d) in data.clone() {
+        for p in 1..d+1 {
+            points.push((x1+d+1-p,y1+p));
+            points.push((x1+d+1-p,y1-p));
+            points.push((x1-d-1+p,y1+p));
+            points.push((x1-d-1+p,y1-p));
+        }
+    }
+
+    for p in points.iter().filter(|(x,y)| 
+        0 <= *x && *x <= 4000000 && 0 <= *y && *y <= 4000000 && !foo(*x,*y) ) {
+        
+        println!("{:?}", p.0 * 4000000 + p.1);
+    }
+
+    Some(()) 
+}
