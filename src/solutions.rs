@@ -1562,7 +1562,6 @@ pub fn solve13p1() -> Option<()> {
 
     println!("{:?}", data);
 
-
     Some(()) 
 }
 
@@ -1684,6 +1683,167 @@ pub fn solve13p2() -> Option<()> {
 
     println!("{:?}", (l1+1) * (l2+1));
 
-
     Some(()) 
+}
+
+pub fn solve14p1() -> Option<()> {
+    let mut screen: [[char; 700]; 200] = [['.'; 700]; 200];
+    fn display(scr: &[[char; 700]; 200]) {
+        for y in 0..170 {
+            for x in 460..570 {
+                print!("{}", scr[y][x]);
+            }
+            print!("\n");
+        }
+    }
+
+    fn drop(scr: &mut [[char; 700]; 200]) -> bool {
+        let mut pos = (500, 0);
+        loop {
+            if pos.1 > 198 {
+                return false
+            } 
+            if scr[pos.1+1][pos.0] == '.' {
+                pos = (pos.0, pos.1+1);
+                continue
+            } 
+            if scr[pos.1+1][pos.0-1] == '.' {
+                pos = (pos.0-1, pos.1+1);
+                continue
+            }
+            if scr[pos.1+1][pos.0+1] == '.' {
+                pos = (pos.0+1, pos.1+1);
+                continue
+            }
+            scr[pos.1][pos.0] = 'o';
+            return true
+        }
+    }
+
+    for line in DAY14.lines() {
+        let mut prev = (1000,0);
+        for xy in line.split(" -> ") {
+            let (xc,yc) = xy.split_once(',')?;
+            let (x,y) = (xc.parse().ok()?, yc.parse().ok()?);
+            if prev.0 == 1000 {
+                prev = (x,y);
+                continue
+            }
+
+            if prev.0 == x {
+                for i in prev.1..y+1 {
+                    screen[i][x] = '#';
+                }
+                for i in y..prev.1+1 {
+                    screen[i][x] = '#';
+                }
+            } else {
+                for i in prev.0..x+1 {
+                    screen[y][i] = '#';
+                }
+                for i in x..prev.0+1 {
+                    screen[y][i] = '#';
+                }
+            }
+            prev = (x,y);
+        }
+    }
+
+    let mut count = 0;
+    while drop(&mut screen) {
+        count += 1;
+    }
+    display(&screen);
+    
+    println!("{:?}", count);
+    
+    Some(())
+}
+
+pub fn solve14p2() -> Option<()> {
+    let mut screen: [[char; 700]; 200] = [['.'; 700]; 200];
+    fn display(scr: &[[char; 700]; 200]) {
+        for y in 0..170 {
+            for x in 410..630 {
+                print!("{}", scr[y][x]);
+            }
+            print!("\n");
+        }
+    }
+
+    fn drop(scr: &mut [[char; 700]; 200]) -> bool {
+        let mut pos = (500, 0);
+        if scr[0][500] == 'o' {
+            return false
+        }
+
+        loop {
+            if pos.1 > 198 {
+                return false
+            } 
+            if scr[pos.1+1][pos.0] == '.' {
+                pos = (pos.0, pos.1+1);
+                continue
+            } 
+            if scr[pos.1+1][pos.0-1] == '.' {
+                pos = (pos.0-1, pos.1+1);
+                continue
+            }
+            if scr[pos.1+1][pos.0+1] == '.' {
+                pos = (pos.0+1, pos.1+1);
+                continue
+            }
+            scr[pos.1][pos.0] = 'o';
+            return true
+        }
+    }
+
+    let mut highest = 0;
+
+    for line in DAY14.lines() {
+        let mut prev = (1000,0);
+        for xy in line.split(" -> ") {
+            let (xc,yc) = xy.split_once(',')?;
+            let (x,y) = (xc.parse().ok()?, yc.parse().ok()?);
+
+            highest = max(y, highest);
+
+            if prev.0 == 1000 {
+                prev = (x,y);
+                continue
+            }
+
+            if prev.0 == x {
+                for i in prev.1..y+1 {
+                    screen[i][x] = '#';
+                }
+                for i in y..prev.1+1 {
+                    screen[i][x] = '#';
+                }
+            } else {
+                for i in prev.0..x+1 {
+                    screen[y][i] = '#';
+                }
+                for i in x..prev.0+1 {
+                    screen[y][i] = '#';
+                }
+            }
+            prev = (x,y);
+        }
+    }
+
+    highest += 2;
+    for x in 0..699 {
+        screen[highest][x] = '#';
+    }
+
+    let mut count = 0;
+    while drop(&mut screen) {
+        count += 1;
+    }
+    display(&screen);
+    
+    println!("{:?}", count);
+    
+    Some(())
 }
